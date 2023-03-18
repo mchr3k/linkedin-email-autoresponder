@@ -20,6 +20,9 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
 5. Run `cdk synth`
 6. Run `cdk deploy`
 
+You can then iterate on the stack and re-deploy it by running:
+`pnpm run build && cdk synth && cdk deploy`
+
 NOTE: Delete the Access Key if you're not going to use it again for a while.
 
 TODO: Investigate https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html

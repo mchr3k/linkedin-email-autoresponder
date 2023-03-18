@@ -9,8 +9,8 @@ export class LinkedinEmailAutoresponderStack extends cdk.Stack {
 
     new lambda.Function(this, 'LinkedinEmailAutoresponderHandler', {
       functionName: 'LinkedinEmailAutoresponderHandler',
-      runtime: lambda.Runtime.NODEJS_14_X,
-      code: lambda.Code.fromAsset('lambda'),
+      runtime: lambda.Runtime.NODEJS_18_X,
+      code: lambda.Code.fromAsset('dist/lambda'),
       handler: 'index.handler',
     });
   }
