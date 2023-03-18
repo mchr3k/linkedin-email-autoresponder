@@ -4,6 +4,7 @@
     "module": "commonjs",
     "lib": ["es2020"],
     "declaration": true,
+    "outDir": "dist",
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
@@ -23,5 +24,5 @@
       "*": ["node_modules/*"]
     }
   },
-  "exclude": ["node_modules", "cdk.out"]
+  "exclude": ["node_modules", "cdk.out", "dist"]
 }
