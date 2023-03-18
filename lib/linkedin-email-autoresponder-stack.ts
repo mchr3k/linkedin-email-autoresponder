@@ -8,6 +8,7 @@ export class LinkedinEmailAutoresponderStack extends cdk.Stack {
     super(scope, id, props);
 
     new lambda.Function(this, 'LinkedinEmailAutoresponderHandler', {
+      functionName: 'LinkedinEmailAutoresponderHandler',
       runtime: lambda.Runtime.NODEJS_14_X,
       code: lambda.Code.fromAsset('lambda'),
       handler: 'index.handler',
