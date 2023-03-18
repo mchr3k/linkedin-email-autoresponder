@@ -1,7 +1,8 @@
 # Requirements
 
 - Git - https://git-scm.com/download
-- Node.js (14.x) - `brew install node@18`
+- Github CLI - `brew install gh`, `gh auth login`
+- Node.js (18.x) - `brew install node@18`
 - pnpm - `brew install pnpm`
 - AWS CDK - `brew install aws-cdk`
 - AWS CLI - `brew install awscli`
