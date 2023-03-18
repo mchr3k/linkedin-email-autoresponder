@@ -24,11 +24,16 @@
     ]
   },
   "devDependencies": {
+    "@aws-cdk/aws-apigatewayv2-alpha": "2.69.0-alpha.0",
+    "@aws-cdk/aws-apigatewayv2-integrations-alpha": "2.69.0-alpha.0",
+    "@types/aws-lambda": "^8.10.114",
     "@types/jest": "^29.4.0",
     "@types/node": "18.14.6",
     "@typescript-eslint/eslint-plugin": "^5.55.0",
     "@typescript-eslint/parser": "^5.55.0",
-    "aws-cdk": "2.69.0",
+    "aws-cdk-lib": "^2.69.0",
+    "aws-sdk": "^2.1338.0",
+    "constructs": "^10.0.0",
     "eslint": "^8.36.0",
     "eslint-config-prettier": "^8.7.0",
     "eslint-config-standard-with-typescript": "^34.0.1",
@@ -45,10 +50,9 @@
     "typescript": "~4.9.5"
   },
   "dependencies": {
-    "@aws-cdk/aws-lambda": "^1.197.0",
-    "@aws-cdk/aws-lambda-event-sources": "^1.197.0",
-    "aws-cdk-lib": "2.69.0",
-    "constructs": "^10.0.0",
+    "aws-lambda": "^1.0.7",
+    "google-auth-library": "^8.7.0",
+    "googleapis": "^113.0.0",
     "source-map-support": "^0.5.21"
   }
 }

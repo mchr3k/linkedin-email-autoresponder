@@ -35,3 +35,7 @@ TODO: Investigate https://docs.aws.amazon.com/cli/latest/userguide/cli-configure
 - `cdk deploy` deploy this stack to your default AWS account/region
 - `cdk diff` compare deployed stack with current state
 - `cdk synth` emits the synthesized CloudFormation template
+
+# Gmail API
+
+https://console.cloud.google.com/apis/
