@@ -95,7 +95,7 @@ async function replyToLinkedInMessages(
         reply.body,
       ].join('\n');
 
-      // Send the reply
+      // TODO: Send the reply
       // await gmailClient.users.messages.send({
       //   userId,
       //   requestBody: {
@@ -106,6 +106,8 @@ async function replyToLinkedInMessages(
       //     threadId,
       //   },
       // });
+
+      // TODO: Mark messageId as read
 
       console.log(
         `Send reply to message ID: ${messageId}, thread ID: ${threadId} - ${mimeMessage}`
