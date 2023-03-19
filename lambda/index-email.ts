@@ -115,7 +115,7 @@ async function replyToLinkedInMessages(
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         id: messageId!,
         requestBody: {
-          removeLabelIds: ['UNREAD', 'INBOX'],
+          removeLabelIds: ['UNREAD' /*, 'INBOX'*/],
         },
       });
       console.log(`Marked message as read and archived`);
