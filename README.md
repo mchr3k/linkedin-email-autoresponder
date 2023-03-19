@@ -3,7 +3,6 @@
 - Git - https://git-scm.com/download
 - Github CLI - `brew install gh`, `gh auth login`
 - Node.js (18.x) - `brew install node@18`
-- pnpm - `brew install pnpm`
 - AWS CDK - `brew install aws-cdk`
 - AWS CLI - `brew install awscli`
 
@@ -16,12 +15,12 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
 1. Create a new IAM User
 2. Create an Access Key for that IAM User
 3. Run `aws configure` and enter the credentials
-4. Run `pnpm run build`
+4. Run `npm run build`
 5. Run `cdk synth`
 6. Run `cdk deploy`
 
 You can then iterate on the stack and re-deploy it by running:
-`pnpm run build && cdk synth && cdk deploy`
+`npm run build && cdk synth && cdk deploy`
 
 NOTE: Delete the Access Key if you're not going to use it again for a while.
 

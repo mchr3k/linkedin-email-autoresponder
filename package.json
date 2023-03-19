@@ -5,8 +5,8 @@
     "linkedin-email-autoresponder": "bin/linkedin-email-autoresponder.js"
   },
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w",
+    "build": "NODE_OPTIONS=--max_old_space_size=4096 tsc",
+    "watch": "NODE_OPTIONS=--max_old_space_size=4096 tsc -w",
     "test": "jest",
     "cdk": "cdk",
     "prepare": "husky install"
@@ -34,6 +34,7 @@
     "aws-cdk-lib": "^2.69.0",
     "aws-sdk": "^2.1338.0",
     "constructs": "^10.0.0",
+    "esbuild": "^0.17.12",
     "eslint": "^8.36.0",
     "eslint-config-prettier": "^8.7.0",
     "eslint-config-standard-with-typescript": "^34.0.1",

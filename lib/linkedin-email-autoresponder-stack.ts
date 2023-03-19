@@ -1,21 +1,21 @@
 import * as cdk from 'aws-cdk-lib';
 import * as apigateway from '@aws-cdk/aws-apigatewayv2-alpha';
 import * as integrations from '@aws-cdk/aws-apigatewayv2-integrations-alpha';
-import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as lambda from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Construct } from 'constructs';
 
 export class LinkedinEmailAutoresponderStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const lambdaFunction = new lambda.Function(
+    const lambdaFunction = new lambda.NodejsFunction(
       this,
       'LinkedinEmailAutoresponderHandler',
       {
         functionName: 'LinkedinEmailAutoresponderHandler',
-        runtime: lambda.Runtime.NODEJS_18_X,
-        code: lambda.Code.fromAsset('dist/lambda'),
-        handler: 'index.handler',
+        runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+        entry: 'lambda/index.ts',
+        handler: 'handler',
       }
     );
 
