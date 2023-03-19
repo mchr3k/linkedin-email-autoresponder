@@ -1,44 +1,27 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { getOAuth2Client } from './gmailClient';
+import { APIGatewayProxyEvent, APIGatewayProxyResultV2 } from 'aws-lambda';
+import {
+  getAuthenticatedOAuth2Client,
+  getAuthorizationUrl,
+  getGmailClient,
+} from './gmail-client';
 
 export const handler = async (
   event: APIGatewayProxyEvent
-): Promise<unknown> => {
+): Promise<APIGatewayProxyResultV2> => {
   const { code } = event.queryStringParameters || {};
-
-  if (!code) {
-    return getAuthorizationUrl();
+  const authenticatedOAuth2Client = await getAuthenticatedOAuth2Client(code);
+  if (!authenticatedOAuth2Client) {
+    console.log('Redirecting to auth URL...');
+    return {
+      statusCode: 302,
+      headers: {
+        Location: await getAuthorizationUrl(),
+      },
+      body: '',
+    };
   }
+  const gmailClient = getGmailClient(authenticatedOAuth2Client);
+  console.log(gmailClient);
 
-  try {
-    const oAuth2Client = await getOAuth2Client();
-    const { tokens } = await oAuth2Client.getToken(code);
-    oAuth2Client.setCredentials(tokens);
-    return { statusCode: 200, body: 'Authenticated successfully!' };
-  } catch (error) {
-    console.error('Error while getting tokens:', error);
-    return { statusCode: 500, body: 'Authentication failed.' };
-  }
+  return { statusCode: 200, body: 'Authenticated successfully!' };
 };
-
-const SCOPES = [
-  'https://www.googleapis.com/auth/gmail.modify',
-  'https://www.googleapis.com/auth/gmail.labels',
-];
-
-async function getAuthorizationUrl(): Promise<APIGatewayProxyResult> {
-  const oAuth2Client = await getOAuth2Client();
-  const authUrl = oAuth2Client.generateAuthUrl({
-    access_type: 'offline',
-    prompt: 'consent',
-    scope: SCOPES,
-  });
-
-  return {
-    statusCode: 302,
-    headers: {
-      Location: authUrl,
-    },
-    body: '',
-  };
-}

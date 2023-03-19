@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as apigateway from '@aws-cdk/aws-apigatewayv2-alpha';
 import * as integrations from '@aws-cdk/aws-apigatewayv2-integrations-alpha';
 import * as lambda from 'aws-cdk-lib/aws-lambda-nodejs';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
 export class LinkedinEmailAutoresponderStack extends cdk.Stack {
@@ -15,8 +16,20 @@ export class LinkedinEmailAutoresponderStack extends cdk.Stack {
         functionName: 'LinkedinEmailAutoresponderHandler',
         runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
         entry: 'lambda/index.ts',
-        handler: 'handler',
       }
+    );
+
+    // Grant read and write access to Secrets Manager
+    lambdaFunction.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: [
+          'secretsmanager:DescribeSecret',
+          'secretsmanager:CreateSecret',
+          'secretsmanager:GetSecretValue',
+          'secretsmanager:PutSecretValue',
+        ],
+        resources: ['arn:aws:secretsmanager:*:*:secret:*'],
+      })
     );
 
     const httpApi = new apigateway.HttpApi(this, 'api-gateway', {
