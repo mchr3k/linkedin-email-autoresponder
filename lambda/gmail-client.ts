@@ -25,27 +25,24 @@ export async function getAuthorizationUrl(): Promise<string> {
   });
 }
 
-export async function getAuthenticatedOAuth2Client(code?: string) {
-  try {
-    const oAuth2Client = await getOAuth2Client();
-    if (code) {
-      const tokens = (await oAuth2Client.getToken(code)).tokens;
-      await putSecretValue('GmailTokens', JSON.stringify(tokens));
-      oAuth2Client.setCredentials(tokens);
-      console.log('Loaded authentication token from OAuth code');
-      return oAuth2Client;
-    } else {
-      const tokens = JSON.parse(
-        await getSecretValue('GmailTokens')
-      ) as Credentials;
-      oAuth2Client.setCredentials(tokens);
-      console.log('Loaded authentication token from Secret');
-      return oAuth2Client;
-    }
-  } catch (error) {
-    console.error(error);
-    return undefined;
-  }
+export async function updateOAuthTokens(code: string) {
+  const oAuth2Client = await getOAuth2Client();
+  const tokens = (await oAuth2Client.getToken(code)).tokens;
+  const secretDescription = await putSecretValue(
+    'GmailTokens',
+    JSON.stringify(tokens)
+  );
+  console.log('Updated recorded tokens');
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return secretDescription.LastChangedDate!;
+}
+
+export async function getAuthenticatedOAuth2Client() {
+  const oAuth2Client = await getOAuth2Client();
+  const tokens = JSON.parse(await getSecretValue('GmailTokens')) as Credentials;
+  oAuth2Client.setCredentials(tokens);
+  console.log('Loaded authentication token from Secret');
+  return oAuth2Client;
 }
 
 export function getGmailClient(oAuth2Client: OAuth2Client): gmail_v1.Gmail {

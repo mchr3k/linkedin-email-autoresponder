@@ -1,16 +1,17 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResultV2 } from 'aws-lambda';
-import {
-  getAuthenticatedOAuth2Client,
-  getAuthorizationUrl,
-  getGmailClient,
-} from './gmail-client';
+import { updateOAuthTokens, getAuthorizationUrl } from './gmail-client';
 
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResultV2> => {
   const { code } = event.queryStringParameters || {};
-  const authenticatedOAuth2Client = await getAuthenticatedOAuth2Client(code);
-  if (!authenticatedOAuth2Client) {
+  if (code) {
+    const tokenUpdateDate = await updateOAuthTokens(code);
+    return {
+      statusCode: 200,
+      body: `Authenticated successfully! - ${tokenUpdateDate.toISOString()}`,
+    };
+  } else {
     console.log('Redirecting to auth URL...');
     return {
       statusCode: 302,
@@ -20,8 +21,4 @@ export const handler = async (
       body: '',
     };
   }
-  const gmailClient = getGmailClient(authenticatedOAuth2Client);
-  console.log(gmailClient);
-
-  return { statusCode: 200, body: 'Authenticated successfully!' };
 };

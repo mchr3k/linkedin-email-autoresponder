@@ -4,6 +4,7 @@ import {
   CreateSecretCommand,
   GetSecretValueCommand,
   PutSecretValueCommand,
+  DescribeSecretCommandOutput,
 } from '@aws-sdk/client-secrets-manager';
 
 const secretsManager = new SecretsManagerClient({});
@@ -27,12 +28,20 @@ export async function getSecretValue(secretId: string): Promise<string> {
 export async function putSecretValue(
   secretId: string,
   secretString: string
-): Promise<void> {
+): Promise<DescribeSecretCommandOutput> {
   try {
     // Check if the secret exists
     await secretsManager.send(
       new DescribeSecretCommand({ SecretId: secretId })
     );
+    // If the secret exists, update its value
+    await secretsManager.send(
+      new PutSecretValueCommand({
+        SecretId: secretId,
+        SecretString: secretString,
+      })
+    );
+    console.log(`Updated secret: ${secretId}`);
   } catch (error: unknown) {
     // If the secret doesn't exist, create it
     if (error instanceof Error && error.name === 'ResourceNotFoundException') {
@@ -44,7 +53,6 @@ export async function putSecretValue(
           })
         );
         console.log(`Created secret: ${secretId}`);
-        return;
       } catch (createError) {
         console.error(
           `Failed to create secret: ${JSON.stringify(createError)}`
@@ -52,21 +60,15 @@ export async function putSecretValue(
         throw createError;
       }
     } else {
-      console.error(`Failed to describe secret: ${JSON.stringify(error)}`);
+      console.error(
+        `Failed to describe/update secret: ${JSON.stringify(error)}`
+      );
       throw error;
     }
   }
 
-  try {
-    // If the secret exists, update its value
-    await secretsManager.send(
-      new PutSecretValueCommand({
-        SecretId: secretId,
-        SecretString: secretString,
-      })
-    );
-  } catch (error) {
-    console.error(`Failed to put secret value: ${JSON.stringify(error)}`);
-    throw error;
-  }
+  const description = await secretsManager.send(
+    new DescribeSecretCommand({ SecretId: secretId })
+  );
+  return description;
 }

@@ -3,24 +3,27 @@ import * as apigateway from '@aws-cdk/aws-apigatewayv2-alpha';
 import * as integrations from '@aws-cdk/aws-apigatewayv2-integrations-alpha';
 import * as lambda from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import { Table, AttributeType, BillingMode } from 'aws-cdk-lib/aws-dynamodb';
+import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
+import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import { Construct } from 'constructs';
+import { Duration } from 'aws-cdk-lib';
 
 export class LinkedinEmailAutoresponderStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const lambdaFunction = new lambda.NodejsFunction(
+    const authLambda = new lambda.NodejsFunction(
       this,
-      'LinkedinEmailAutoresponderHandler',
+      'GmailApiAuthentication',
       {
-        functionName: 'LinkedinEmailAutoresponderHandler',
+        functionName: 'GmailApiAuthentication',
         runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
-        entry: 'lambda/index.ts',
+        entry: 'lambda/index-auth.ts',
       }
     );
 
-    // Grant read and write access to Secrets Manager
-    lambdaFunction.addToRolePolicy(
+    authLambda.addToRolePolicy(
       new iam.PolicyStatement({
         actions: [
           'secretsmanager:DescribeSecret',
@@ -49,7 +52,7 @@ export class LinkedinEmailAutoresponderStack extends cdk.Stack {
       methods: [apigateway.HttpMethod.ANY],
       integration: new integrations.HttpLambdaIntegration(
         'http-lambda',
-        lambdaFunction
+        authLambda
       ),
     });
 
@@ -57,5 +60,39 @@ export class LinkedinEmailAutoresponderStack extends cdk.Stack {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       value: httpApi.url!,
     });
+
+    const emailLambda = new lambda.NodejsFunction(
+      this,
+      'LinkedInEmailAutoResponder',
+      {
+        functionName: 'LinkedInEmailAutoResponder',
+        runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+        entry: 'lambda/index-email.ts',
+        timeout: Duration.minutes(5),
+      }
+    );
+
+    emailLambda.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: [
+          'secretsmanager:DescribeSecret',
+          'secretsmanager:GetSecretValue',
+        ],
+        resources: ['arn:aws:secretsmanager:*:*:secret:*'],
+      })
+    );
+
+    const dynamoTable = new Table(this, 'LinkedInReplyTable', {
+      tableName: 'LinkedInReplyTable',
+      partitionKey: { name: 'senderName', type: AttributeType.STRING },
+      sortKey: { name: 'subject', type: AttributeType.STRING },
+      billingMode: BillingMode.PAY_PER_REQUEST,
+    });
+    dynamoTable.grantReadWriteData(emailLambda);
+
+    const hourlyRule = new Rule(this, 'HourlyRule', {
+      schedule: Schedule.rate(cdk.Duration.hours(1)),
+    });
+    hourlyRule.addTarget(new LambdaFunction(emailLambda));
   }
 }
