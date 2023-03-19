@@ -4,21 +4,25 @@ import {
   storeSenderSubjectInDynamoDB,
 } from './dynamodb';
 import { getAuthenticatedOAuth2Client, getGmailClient } from './gmail-client';
+import * as base64 from 'base64-url';
+import { getSecretValue } from './secrets-manager';
 
 async function replyToLinkedInMessages(
   gmailClient: gmail_v1.Gmail
 ): Promise<void> {
+  const autoreplyMessage = await getSecretValue('LinkedinAutoreplyMessage');
+  console.log(`Loaded autoreply message: ${autoreplyMessage}`);
+
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
   const oneWeekAgoISODate = oneWeekAgo.toISOString().split('T')[0];
-  const query = `from:linkedin.com after:${oneWeekAgoISODate}`;
   const userId = 'me';
 
   try {
     // List all messages from LinkedIn received within last week
     const messagesResponse = await gmailClient.users.messages.list({
       userId,
-      q: query,
+      q: `from:linkedin.com after:${oneWeekAgoISODate}`,
     });
 
     if (!messagesResponse.data.messages) {
@@ -76,41 +80,28 @@ async function replyToLinkedInMessages(
         continue;
       }
 
-      // Create the reply email
-      const reply = {
-        to: messageDetails.data.payload?.headers?.find(
-          (header) => header.name === 'From'
-        )?.value,
-        subject: `Re: ${subject}`,
-        body: 'Your reply message goes here.',
-      };
-
       // Create MIME message
       const mimeMessage = [
         'Content-Type: text/plain; charset="UTF-8"',
         `From: ${userId}`,
-        `To: ${reply.to}`,
-        `Subject: ${reply.subject}`,
+        `To: ${senderName}`,
+        `Subject: Re: ${subject}`,
         '',
-        reply.body,
+        autoreplyMessage,
       ].join('\n');
 
-      // TODO: Send the reply
-      // await gmailClient.users.messages.send({
-      //   userId,
-      //   requestBody: {
-      //     raw: Buffer.from(mimeMessage)
-      //       .toString('base64')
-      //       .replace(/\+/g, '-')
-      //       .replace(/\//g, '_'),
-      //     threadId,
-      //   },
-      // });
-
-      // TODO: Mark messageId as read
+      const safeMimeMessage = base64.escape(base64.encode(mimeMessage));
+      console.log(`safeMimeMessage: ${safeMimeMessage}`);
+      await gmailClient.users.messages.send({
+        userId,
+        requestBody: {
+          raw: safeMimeMessage,
+          threadId,
+        },
+      });
 
       console.log(
-        `Send reply to message ID: ${messageId}, thread ID: ${threadId} - ${mimeMessage}`
+        `Sent reply to message ID: ${messageId}, thread ID: ${threadId} - ${mimeMessage}`
       );
 
       // Store the sender name and subject in DynamoDB
@@ -118,6 +109,16 @@ async function replyToLinkedInMessages(
       console.log(
         `Stored sender name and subject in DynamoDB: ${senderName}, ${subject}`
       );
+
+      await gmailClient.users.messages.modify({
+        userId,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        id: messageId!,
+        requestBody: {
+          removeLabelIds: ['UNREAD', 'INBOX'],
+        },
+      });
+      console.log(`Marked message as read and archived`);
     }
   } catch (error) {
     console.error(
