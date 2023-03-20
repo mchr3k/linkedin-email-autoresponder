@@ -1,3 +1,15 @@
+ISSUE:
+
+LinkedIn keeps rejecting my email autoreplies:
+
+```
+The response from the remote server was:
+
+550 5.7.1 sender not authorised to email this recipient
+```
+
+I don't know how to fix this 😢
+
 # Local development requirements
 
 - Git - https://git-scm.com/download
