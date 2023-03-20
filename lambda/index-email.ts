@@ -49,6 +49,12 @@ async function replyToLinkedInMessages(
         messageDetails.data.payload?.headers?.find(
           (header) => header.name === 'Subject'
         )?.value || '';
+
+      if (subject.startsWith('Message replied:')) {
+        // Skip this message
+        continue;
+      }
+
       const senderName = messageDetails.data.payload?.headers?.find(
         (header) => header.name === 'From'
       )?.value;
@@ -58,13 +64,26 @@ async function replyToLinkedInMessages(
         continue;
       }
 
-      if (subject.startsWith('Message replied:')) {
+      if (senderName.indexOf('inmail-hit-reply@linkedin.com') === -1) {
         // Skip this message
         continue;
       }
 
-      if (senderName.indexOf('inmail-hit-reply@linkedin.com') === -1) {
-        // Skip this message
+      const replyTo = messageDetails.data.payload?.headers?.find(
+        (header) => header.name === 'Reply-To'
+      )?.value;
+
+      if (!replyTo) {
+        console.warn('Reply-To is missing. Skipping this message.');
+        continue;
+      }
+
+      const messageIdHeader = messageDetails.data.payload?.headers?.find(
+        (header) => header.name === 'Message-ID'
+      )?.value;
+
+      if (!messageIdHeader) {
+        console.warn('Message-ID is missing. Skipping this message.');
         continue;
       }
 
@@ -84,8 +103,10 @@ async function replyToLinkedInMessages(
       const mimeMessage = [
         'Content-Type: text/plain; charset="UTF-8"',
         `From: ${userId}`,
-        `To: ${senderName}`,
+        `To: ${replyTo}`,
         `Subject: Re: ${subject}`,
+        `In-Reply-To: ${messageIdHeader}`,
+        `References: ${messageIdHeader}`,
         '',
         autoreplyMessage,
       ].join('\n');
@@ -115,7 +136,7 @@ async function replyToLinkedInMessages(
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         id: messageId!,
         requestBody: {
-          removeLabelIds: ['UNREAD' /*, 'INBOX'*/],
+          removeLabelIds: ['UNREAD', 'INBOX'],
         },
       });
       console.log(`Marked message as read and archived`);
