@@ -41,6 +41,7 @@ export async function storeSenderSubjectInDynamoDB(
       Item: {
         senderName: { S: senderName },
         subject: { S: subject },
+        createdAt: { S: new Date().toISOString() },
       },
     });
 
